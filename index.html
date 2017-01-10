@@ -4,6 +4,18 @@
   <meta charset="utf-8">
   <title>HKS Line Chart Example</title>
   <style>
+
+    body {
+      font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
     .axis--x path {
       display: none;
     }
@@ -13,6 +25,17 @@
       stroke: steelblue;
       stroke-width: 1.5px;
     }
+
+    .overlay {
+      fill: none;
+      pointer-events: all;
+    }
+
+    .focus circle {
+      fill: none;
+      stroke: steelblue;
+    }
+
   </style>
 </head>
 
@@ -58,6 +81,9 @@
   // %b - abbreviated month name.
   // %y - year without century as a decimal number [00,99]
   var parseTime = d3.timeParse("%d-%b-%y");
+  var bisectDate = d3.bisector(function(d) { return d.date; }).left;
+  var formatValue = d3.format(",.2f");
+  var formatCurrency = function(d) { return "$" + formatValue(d); };
 
   // download data.tsv and parse
   d3.tsv("data.tsv", function(d) {
@@ -99,6 +125,35 @@
         .datum(data)
         .attr("class", "line")
         .attr("d", line);
+
+      var focus = g.append("g")
+        .attr("class", "focus")
+        .style("display", "none");
+
+      focus.append("circle")
+        .attr("r", 4.5);
+
+      focus.append("text")
+        .attr("x", 9)
+        .attr("dy", ".35em");
+
+      g.append("rect")
+        .attr("class", "overlay")
+        .attr("width", width)
+        .attr("height", height)
+        .on("mouseover", function() { focus.style("display", null); })
+        .on("mouseout", function() { focus.style("display", "none"); })
+        .on("mousemove", mousemove);
+
+      function mousemove() {
+        var x0 = x.invert(d3.mouse(this)[0]),
+            i = bisectDate(data, x0, 1),
+            d0 = data[i - 1],
+            d1 = data[i],
+            d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+        focus.attr("transform", "translate(" + x(d.date) + "," + y(d.close) + ")");
+        focus.select("text").text(formatCurrency(d.close));
+      }
 
   });
 
