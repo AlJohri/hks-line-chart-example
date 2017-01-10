@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>HKS Line Chart Example</title>
+</head>
+
+<body>
+
+	<h1>HKS Line Chart Example</h1>
+	<pre id="data"></pre>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<script>
+
+	// defines date time format used in the tsv file
+	// https://github.com/d3/d3-time-format
+	// %d - zero-padded day of the month as a decimal number [01,31].
+	// %b - abbreviated month name.
+	// %y - year without century as a decimal number [00,99]
+	var parseTime = d3.timeParse("%d-%b-%y");
+
+	d3.tsv("data.tsv", function(d) {
+	  d.date = parseTime(d.date);
+	  d.close = +d.close;
+	  return d;
+	}, function(error, data) {
+	  if (error) throw error;
+	  console.log(data);
+	  document.querySelector("#data").innerHTML = JSON.stringify(data, null, '  ');
+	});
+
+	</script>
+
+</body>
+</html>
